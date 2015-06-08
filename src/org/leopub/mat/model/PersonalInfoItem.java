@@ -19,11 +19,11 @@ package org.leopub.mat.model;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class PersonalInfoItem {
+public class PersonalInfoItem implements Comparable<PersonalInfoItem> {
     public enum InfoType {
-        Text,
-        Option,
-        Date,
+        text,
+        select,
+        date,
     };
     private String mKey;
     private InfoType mType;
@@ -32,6 +32,7 @@ public class PersonalInfoItem {
     private String mTitle;
     private String mOptions;
     private String mHint;
+    private int mOrder;
 
     public PersonalInfoItem(JSONObject jsonObj) throws JSONException {
         mKey = jsonObj.getString("key");
@@ -41,6 +42,7 @@ public class PersonalInfoItem {
         mTitle = jsonObj.getString("title");
         mOptions = jsonObj.optString("options");
         mHint = jsonObj.optString("hint");
+        mOrder = jsonObj.getInt("order");
     }
 
     public String getKey() {
@@ -88,5 +90,21 @@ public class PersonalInfoItem {
     }
     public void setOptions(String options) {
         mOptions = options;
+    }
+    public int getOrder() {
+        return mOrder;
+    }
+    public void setOrder(int order) {
+        mOrder = order;
+    }
+    @Override
+    public int compareTo(PersonalInfoItem other) {
+        if (mOrder == other.mOrder) {
+            return 0;
+        } else if (mOrder > other.mOrder) {
+            return 1;
+        } else {
+            return -1;
+        }
     }
 }

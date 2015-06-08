@@ -24,10 +24,10 @@ import org.leopub.mat.UserManager;
 import org.leopub.mat.model.SentItem;
 
 import android.annotation.SuppressLint;
+import android.app.ListFragment;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.app.ListFragment;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;

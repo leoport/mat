@@ -68,11 +68,14 @@ public class UserDataManager {
 
         mDatabase = SQLiteDatabase.openOrCreateDatabase(mConfigure.getSQLitePath(), null);
         // create table contact
-        String query = "CREATE TABLE IF NOT EXISTS contact (`id` integer PRIMARY KEY, name varchar(255), name_char varchar(10), type char, unit varchar(10), title varchar(10), timestamp timestamp);";
+        String query = "CREATE TABLE IF NOT EXISTS contact (`id` integer PRIMARY KEY, name varchar(255), name_char varchar(10), type char, unit varchar(10), title varchar(10), `f` integer, `b` integer, `t` integer, timestamp timestamp);";
         mDatabase.execSQL(query);
         mDatabase.execSQL("CREATE INDEX IF NOT EXISTS idx_contact_timestamp ON contact (timestamp);");
         mDatabase.execSQL("CREATE INDEX IF NOT EXISTS idx_contact_unit ON contact (unit);");
         mDatabase.execSQL("CREATE INDEX IF NOT EXISTS idx_contact_name_char ON contact (name_char);");
+        mDatabase.execSQL("CREATE INDEX IF NOT EXISTS idx_contact_f ON contact (f);");
+        mDatabase.execSQL("CREATE INDEX IF NOT EXISTS idx_contact_b ON contact (b);");
+        mDatabase.execSQL("CREATE INDEX IF NOT EXISTS idx_contact_t ON contact (t);");
        // create table inbox 
         mDatabase.execSQL("CREATE TABLE IF NOT EXISTS `inbox` (`msg_id` integer PRIMARY KEY, `src_id` integer, `src_title` varchar(40), param integer, `content` varchar(2048), `status` integer, `timestamp` timestamp);");
         mDatabase.execSQL("CREATE INDEX IF NOT EXISTS idx_inbox_timestamp ON inbox (`timestamp`);");
@@ -140,13 +143,16 @@ public class UserDataManager {
                 JSONObject obj = arr.getJSONObject(i);
 //contact (`id` integer PRIMARY KEY, name varchar(255), type char, unit varchar(10), title varchar(10), timestamp timestamp)
                 String query = String.format(
-                        "INSERT OR REPLACE INTO contact VALUES('%s', '%s', '%s', '%s', '%s', '%s', '%s');",
+                        "INSERT OR REPLACE INTO contact VALUES('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s');",
                         obj.getString("id"),
                         obj.getString("name"),
                         obj.getString("name_char"),
                         obj.getString("type"),
                         obj.getString("unit"),
                         obj.getString("title"),
+                        obj.getString("f"),
+                        obj.getString("b"),
+                        obj.getString("f"),
                         obj.getString("timestamp"));
                 Logger.d("SQL", query);
                 mDatabase.execSQL(query);
@@ -273,7 +279,26 @@ public class UserDataManager {
         Cursor cursor = mDatabase.rawQuery(sql, params);
         while (cursor.moveToNext()) {
             Contact contact = new Contact();
-            contact.setId(cursor.getInt(0));
+            contact.setId(cursor.getString(0));
+            contact.setName(cursor.getString(1));
+            contact.setType(cursor.getString(2));
+            contact.setUnit(cursor.getString(3));
+            contact.setTitle(cursor.getString(4));
+            res.add(contact);
+        }
+        cursor.close();
+        return res;
+    }
+
+    public List<Contact> getUnderling() {
+        List<Contact> res = new ArrayList<Contact>();
+//contact (`id` integer PRIMARY KEY, name varchar(255), name_char varchar(10), type char, unit varchar(10), title varchar(10), timestamp timestamp)
+        Contact me = getContact(mUser.getUsername());
+        String sql = "SELECT id, name, type, unit, title FROM contact WHERE `" +  me.getTitle() + "`='" + me.getId() + "'ORDER BY id;";
+        Cursor cursor = mDatabase.rawQuery(sql, null);
+        while (cursor.moveToNext()) {
+            Contact contact = new Contact();
+            contact.setId(cursor.getString(0));
             contact.setName(cursor.getString(1));
             contact.setType(cursor.getString(2));
             contact.setUnit(cursor.getString(3));
@@ -291,7 +316,7 @@ public class UserDataManager {
         Contact contact = null;
         if (cursor.moveToNext()) {
             contact = new Contact();
-            contact.setId(cursor.getInt(0));
+            contact.setId(cursor.getString(0));
             contact.setName(cursor.getString(1));
             contact.setType(cursor.getString(2));
             contact.setUnit(cursor.getString(3));
@@ -540,6 +565,11 @@ public class UserDataManager {
         /* String res = HttpUtil.getUrl(Configure.INFO_UNDERLING_URL, user);*/
         HttpUtil.getUrl(Configure.INFO_UNDERLING_URL, mUser, new File(mConfigure.getUnderlingJSONPath()));
         String response = readFile(mConfigure.getUnderlingJSONPath());
+        return response;
+    }
+
+    public String getCategoryJSON(String id) throws NetworkException, AuthException {
+        String response = HttpUtil.getUrl(Configure.INFO_CATEGORY_URL + "?id=" + id, mUser);
         return response;
     }
 

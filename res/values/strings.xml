@@ -7,10 +7,11 @@
     <string name="action_settings">设置</string>
     <string name="action_user">用户</string>
     <string name="action_refresh">刷新</string>
-    <string name="compose_message">发送消息</string>
+    <string name="action_compose">发送消息</string>
     <string name="action_inbox">收件箱</string>
     <string name="action_sent">发件箱</string>
     <string name="action_confirm_detail">确认记录</string>
+    <string name="action_info_category">数据中心</string>
     <string name="roger">我知道了</string>
     <string name="confirm_detail">确认记录</string>
     <string name="login">登录</string>
@@ -38,6 +39,8 @@
     <string name="title_for_x">学习委员</string>
     <string name="title_for_y">体育委员</string>
     <string name="title_for_z">组织委员</string>
+    <string name="title_for_s">汇总表</string>
+    <string name="title_for_f">辅导员</string>
     <string name="all_students">全体同学</string>
     <string name="error_network">网络有问题</string>
     <string name="error_network_data">网络数据有问题</string>
@@ -70,7 +73,7 @@
     <string name="back">返回</string>
     <string name="auth_fail">你没有这个权限</string>
     <string name="personal_info">个人信息</string>
-    <string name="underling_info">我的小伙伴</string>
+    <string name="my_underling">我的小伙伴</string>
     <string name="loading">加载中……</string>
     <string name="send_msg_fail">发送消息失败</string>
     <string name="confirm_message_OK">成功确认信息</string>

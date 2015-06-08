@@ -9,7 +9,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         style="?android:attr/buttonBarButtonStyle"
-        android:text="@string/compose_message" />
+        android:text="@string/action_compose" />
     <Button
         android:id="@+id/update_now"
         android:layout_width="match_parent"
@@ -40,7 +40,7 @@
         android:layout_height="wrap_content"
         android:visibility="gone"
         style="?android:attr/buttonBarButtonStyle"
-        android:text="@string/underling_info" />
+        android:text="@string/my_underling" />
     <Button
         android:id="@+id/logout"
         android:layout_width="match_parent"

@@ -19,9 +19,9 @@ package org.leopub.mat.model;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class UnderlingItem {
+public class CategoryItem {
     private String mStudentId;
-    public UnderlingItem(JSONObject jsonObj) throws JSONException {
+    public CategoryItem(JSONObject jsonObj) throws JSONException {
         mStudentId = jsonObj.getString("student_id");
     }
     public String getStudentId() {

@@ -17,16 +17,16 @@
 package org.leopub.mat;
 
 public class Contact {
-    private int mId;
+    private String mId;
     private String mName;
     private String mType;
     private String mUnit;
     private String mTitle;
 
-    public int getId() {
+    public String getId() {
         return mId;
     }
-    public void setId(int id) {
+    public void setId(String id) {
         mId = id;
     }
     public String getName() {

@@ -19,7 +19,9 @@ package org.leopub.mat.controller;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Scanner;
 
@@ -27,9 +29,11 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.leopub.mat.Configure;
+import org.leopub.mat.Contact;
 import org.leopub.mat.HttpUtil;
 import org.leopub.mat.Logger;
 import org.leopub.mat.R;
+import org.leopub.mat.UserDataManager;
 import org.leopub.mat.UserManager;
 import org.leopub.mat.exception.AuthException;
 import org.leopub.mat.exception.NetworkDataException;
@@ -38,6 +42,7 @@ import org.leopub.mat.model.PersonalInfoItem;
 import org.leopub.mat.model.User;
 
 import android.annotation.SuppressLint;
+import android.app.ActionBar;
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.app.DatePickerDialog.OnDateSetListener;
@@ -48,39 +53,68 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.InputType;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
 public class PersonalInfoActivity extends ListActivity {
-    public final static String PERSON_ID = "org.leopub.mat.personId";
+    private PersonalInfoArrayAdapter mPersonalInfoArrayAdapter;
+    private List<PersonalInfoItem> mPersonalInfoList;
+    private List<InfoCategoryItem> mInfoCategoryList;
+    private List<Contact> mUnderlingList;
+    private Contact mChosenPerson;
+    private InfoCategoryItem mChosenCategory;
 
-    private PersonalInfoArrayAdapter mArrayAdapter;
-    private List<PersonalInfoItem> mItemList;
     private OnClickListener mEditButtonListener;
     private OnClickListener mHelpButtonListener;
-    private String mPersonId;
+
+    private UserManager mUserManager;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mPersonId = getIntent().getStringExtra(PERSON_ID);
         setContentView(R.layout.activity_personal_info);
-        getActionBar().setDisplayHomeAsUpEnabled(true);
+
+        ActionBar actionBar = getActionBar();
+        actionBar.setDisplayHomeAsUpEnabled(true);
+
+        mUserManager = UserManager.getInstance();
 
         mEditButtonListener = new EditButtonListener();
         mHelpButtonListener = new HelpButtonListener();
-        mItemList = new ArrayList<PersonalInfoItem>();
-        mArrayAdapter = null;
-        updateView();
-        GetPersonalInfoTask getTask= new GetPersonalInfoTask();
-        getTask.execute();
+        mPersonalInfoList = new ArrayList<PersonalInfoItem>();
+        mPersonalInfoArrayAdapter = null;
+
+        UserDataManager userDataManager = mUserManager.getCurrentUserDataManager();
+        mUnderlingList = userDataManager.getUnderling();
+        mChosenPerson = userDataManager.getContact(mUserManager.getCurrentUser().getUsername());
+        updateCategoryData();
+        //updateView();
+
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.personal_info, menu);
+        MenuItem menuItem = menu.findItem(R.id.person_name);
+        if (mUnderlingList.size() == 0) {
+            menuItem.setVisible(false);
+        } else {
+            menuItem.setTitle(mChosenPerson.getName());
+        }
+        return true;
     }
 
     @Override
@@ -88,17 +122,71 @@ public class PersonalInfoActivity extends ListActivity {
         if (item.getItemId() == android.R.id.home) {
             finish();
             return true;
+        } else if (item.getItemId() == R.id.person_name) {
+            onChoosePerson();
+            return true;
         }
         return super.onOptionsItemSelected(item);
     }
 
+    public void updateCategoryData() {
+        GetInfoCategoryTask getInfoCategoryTask= new GetInfoCategoryTask();
+        getInfoCategoryTask.execute();
+        //updateView();
+    }
+
+    public void updateCategoryView() {
+        int n = mInfoCategoryList.size();
+        String categories[] = new String[n];
+        for (int i = 0; i < n; i++) {
+            categories[i] = mInfoCategoryList.get(i).getName();
+        }
+        ArrayAdapter<String> categoryAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, categories);
+        Spinner spinner = (Spinner) findViewById(R.id.category_spinner);
+        spinner.setAdapter(categoryAdapter);
+        spinner.setOnItemSelectedListener(new OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                //String str=parent.getItemAtPosition(position).toString();
+                //Toast.makeText(PersonalInfoActivity.this, "Äãµã»÷µÄÊÇ:"+str, 2000).show();
+                mChosenCategory = mInfoCategoryList.get(position);
+                GetPersonalInfoTask getTask = new GetPersonalInfoTask();
+                getTask.execute();
+            }
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });
+    }
+
+    public void onChoosePerson() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(getString(R.string.my_underling));
+
+        int n = mUnderlingList.size();
+        String[] items = new String[n];
+        for (int i = 0; i < n; i++) {
+            Contact person = mUnderlingList.get(i);
+            items[i] = person.getId() + " " + person.getName();
+        }
+        builder.setItems(items, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                mChosenPerson = mUnderlingList.get(which);
+                invalidateOptionsMenu();
+                updateCategoryData();
+            }
+        });
+        builder.create().show(); 
+    }
+
     public void updateView() {
         int pos = 0;
-        if (mArrayAdapter != null) {
+        if (mPersonalInfoArrayAdapter != null) {
             pos = getListView().getFirstVisiblePosition();
         }
-        mArrayAdapter = new PersonalInfoArrayAdapter(this, R.layout.personal_info_item, R.id.info_item_title, mItemList);
-        getListView().setAdapter(mArrayAdapter);
+        mPersonalInfoArrayAdapter = new PersonalInfoArrayAdapter(this, R.layout.personal_info_item, R.id.info_item_title, mPersonalInfoList);
+        getListView().setAdapter(mPersonalInfoArrayAdapter);
         getListView().setSelection(pos);
     }
 
@@ -145,6 +233,25 @@ public class PersonalInfoActivity extends ListActivity {
     private List<PersonalInfoItem> parseJSON(String s) throws NetworkDataException {
         List<PersonalInfoItem> itemList = new ArrayList<PersonalInfoItem>();
         try {
+            JSONObject root = new JSONObject(s);
+            Iterator<String> iter = root.keys();
+            while (iter.hasNext()) {
+                String key = iter.next();
+                JSONObject obj = root.getJSONObject(key);
+                obj.put("key", key);
+                PersonalInfoItem item = new PersonalInfoItem(obj);
+                itemList.add(item);
+            }
+        } catch (JSONException e) {
+            throw new NetworkDataException("Parse the JSON of personal information failed");
+        }
+        Collections.sort(itemList);
+        return itemList;
+    }
+    /*
+    private List<PersonalInfoItem> parseJSON(String s) throws NetworkDataException {
+        List<PersonalInfoItem> itemList = new ArrayList<PersonalInfoItem>();
+        try {
             JSONArray array = new JSONArray(s);
             int n = array.length();
             for (int i = 0; i < n; i++) {
@@ -156,7 +263,7 @@ public class PersonalInfoActivity extends ListActivity {
             throw new NetworkDataException("Parse the JSON of personal information failed");
         }
         return itemList;
-    } 
+    } */
 
     private class GetPersonalInfoTask extends AsyncTask<String, Void, String> {
         public GetPersonalInfoTask() {
@@ -165,15 +272,11 @@ public class PersonalInfoActivity extends ListActivity {
 
         @Override
         protected String doInBackground(String... args) {
-            User user = UserManager.getInstance().getCurrentUser();
             String response = "";
             try {
-                String url = Configure.INFO_GET_URL;
-                if (mPersonId != null) {
-                    url = url + "?id=" + mPersonId;
-                }
-                response = HttpUtil.getUrl(url, user);
-                mItemList = parseJSON(response);
+                User user = mUserManager.getCurrentUser();
+                response = HttpUtil.getUrl(mChosenCategory.getUrl(), user);
+                mPersonalInfoList = parseJSON(response);
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -207,10 +310,9 @@ public class PersonalInfoActivity extends ListActivity {
 
         @Override
         protected String doInBackground(String... args) {
-            User user = UserManager.getInstance().getCurrentUser();
             try {
-                String res = HttpUtil.postURL(user, Configure.INFO_UPDATE_URL, args[0]);
-                mItemList = parseJSON(res);
+                String res = HttpUtil.postURL(mUserManager.getCurrentUser(), mChosenCategory.getUrl(), args[0]);
+                mPersonalInfoList = parseJSON(res);
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -243,12 +345,12 @@ public class PersonalInfoActivity extends ListActivity {
         @Override
         public void onClick(View view) {
             String s = (String) view.getTag();
-            for (PersonalInfoItem item : mItemList) {
+            for (PersonalInfoItem item : mPersonalInfoList) {
                 if (item.getKey().equals(s)) {
                     mInfoItem = item;
-                    if (mInfoItem.getType() == PersonalInfoItem.InfoType.Option) {
+                    if (mInfoItem.getType() == PersonalInfoItem.InfoType.select) {
                         buildOptionDialog();
-                    } else if(mInfoItem.getType() == PersonalInfoItem.InfoType.Date){
+                    } else if(mInfoItem.getType() == PersonalInfoItem.InfoType.date){
                         String value = item.getValue();
                         if (value == null || value.length() == 0) {
                             value = new Date().toString();
@@ -270,10 +372,7 @@ public class PersonalInfoActivity extends ListActivity {
 
         private void update(String newValue) {
             try {
-                String params = mInfoItem.getKey() + "=" + URLEncoder.encode(newValue, "utf-8");
-                if (mPersonId != null) {
-                    params = params + "&id=" + mPersonId;
-                }
+                String params = "key=" + mInfoItem.getKey() + "&value=" + URLEncoder.encode(newValue, "utf-8");
                 UpdatePersonalInfoTask updateTask = new UpdatePersonalInfoTask();
                 updateTask.execute(params);
             } catch (UnsupportedEncodingException e) {
@@ -338,7 +437,7 @@ public class PersonalInfoActivity extends ListActivity {
         @Override
         public void onClick(View view) {
             String s = (String) view.getTag();
-            for (PersonalInfoItem item : mItemList) {
+            for (PersonalInfoItem item : mPersonalInfoList) {
                 if (item.getKey().equals(s)) {
                     buildTextDialog(item);
                     break;
@@ -358,4 +457,78 @@ public class PersonalInfoActivity extends ListActivity {
             builder.show();
         }
     };
+    private class GetInfoCategoryTask extends AsyncTask<String, Void, String> {
+        public GetInfoCategoryTask() {
+            super();
+        }
+
+        @Override
+        protected String doInBackground(String... args) {
+            try {
+                String res = UserManager.getInstance().getCurrentUserDataManager().getCategoryJSON(mChosenPerson.getId());
+                mInfoCategoryList = parseJSON(res);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        updateCategoryView();
+                    }
+                 });
+            } catch (NetworkException e) {
+                showToastHint(getString(R.string.error_network));
+            } catch (AuthException e) {
+                showToastHint(getString(R.string.error_auth_fail));
+            } catch (NetworkDataException e) {
+                showToastHint(getString(R.string.error_network_data));
+            }
+            return "";
+        }
+        private void showToastHint(final String message) {
+            runOnUiThread(new Runnable() {
+               @Override
+               public void run() {
+                    Toast.makeText(PersonalInfoActivity.this, message, Toast.LENGTH_LONG).show();
+               }
+            });
+        }
+
+        private List<InfoCategoryItem> parseJSON(String s) throws NetworkDataException {
+            List<InfoCategoryItem> itemList = new ArrayList<InfoCategoryItem>();
+            try {
+                JSONArray array = new JSONArray(s);
+                int n = array.length();
+                for (int i = 0; i < n; i++) {
+                    JSONObject obj = array.getJSONObject(i);
+                    InfoCategoryItem item = new InfoCategoryItem(obj);
+                    if (item.getType().equals("person")) {
+                        itemList.add(item);
+                    }
+                }
+            } catch (JSONException e) {
+                Logger.i("CATEGORY", e.getMessage());
+                throw new NetworkDataException("Parse the JSON of categories failed");
+            }
+            return itemList;
+        }
+    }
+
+    private class InfoCategoryItem {
+        private String mKey;
+        private String mName;
+        private String mType;
+
+        public InfoCategoryItem(JSONObject obj) throws JSONException {
+            mKey = obj.getString("key");
+            mName = obj.getString("name");
+            mType = obj.getString("type");
+        }
+        public String getName() {
+            return mName;
+        }
+        public String getType() {
+            return mType;
+        }
+        public String getUrl() {
+            return Configure.INFO_URL + mKey + ".php?" + "id=" + mChosenPerson.getId();
+        }
+    }
 }

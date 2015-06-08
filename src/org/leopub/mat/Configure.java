@@ -31,8 +31,10 @@ public class Configure {
     public static final String JSON_URL            = "http://leopub.org/msg/client.php";
     public static final String CONFIRM_URL         = "http://leopub.org/msg/confirm_done.php?src=%d&msg=%d&since=%s";
     public static final String NEW_MESSAGE_URL     = "http://leopub.org/msg/new_msg_done.php";
+    public static final String INFO_URL            = "http://leopub.org/info/";
     public static final String INFO_GET_URL        = "http://leopub.org/info/get.php";
     public static final String INFO_UNDERLING_URL  = "http://leopub.org/info/underling.php";
+    public static final String INFO_CATEGORY_URL   = "http://leopub.org/info/category.php";
     public static final String INFO_UPDATE_URL     = "http://leopub.org/info/update.php";
 
     public static final String HOME_DIR_NAME         = "/MaT";

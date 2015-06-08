@@ -25,10 +25,10 @@ import org.leopub.mat.UserManager;
 import org.leopub.mat.model.InboxItem;
 
 import android.annotation.SuppressLint;
+import android.app.ListFragment;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.app.ListFragment;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -65,7 +65,7 @@ public class InboxFragment extends ListFragment {
         if (mUserDataManager == null) return;
 
         List<InboxItem> inboxItemList = mUserDataManager.getInboxItems();
-        mArrayAdapter = new InboxArrayAdapter(this.getActivity(), R.layout.list_item, R.id.item_content, inboxItemList);
+        mArrayAdapter = new InboxArrayAdapter(getActivity(), R.layout.list_item, R.id.item_content, inboxItemList);
         TextView textView = new TextView(getActivity());
         textView.setText(getString(R.string.last_update_from) + mUserDataManager.getBriefLastUpdateTime());
         textView.setGravity(Gravity.CENTER);

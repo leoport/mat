@@ -21,11 +21,11 @@ import java.util.Stack;
 import org.leopub.mat.Configure;
 import org.leopub.mat.ItemStatus;
 import org.leopub.mat.MyApplication;
-import org.leopub.mat.R;
 import org.leopub.mat.UserManager;
 import org.leopub.mat.model.InboxItem;
 import org.leopub.mat.service.ConfirmMessageService;
 
+import org.leopub.mat.R;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
